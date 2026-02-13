@@ -1,25 +1,6 @@
 <?php
 include '../config.php';
-session_start();
-if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    header("Location: index.php");
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title   = trim($_POST['title'] ?? '');
-    $content = trim($_POST['content'] ?? '');
-    $cat_id  = (int)($_POST['category'] ?? 0);
-
-    if ($title && $content && $cat_id > 0) {
-        $stmt = $pdo->prepare("INSERT INTO articles (title, content, category_id) VALUES (?, ?, ?)");
-        $stmt->execute([$title, $content, $cat_id]);
-        header("Location: index.php");
-        exit;
-    } else {
-        $error = "Tous les champs sont obligatoires !";
-    }
-}
+include '../PHP/add_admin.php';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -31,23 +12,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="stylesheet" type="text/css" href="../CSS/add_style.css">
 </head>
 <body>
-
   <div class="container">
     <h1>Ajouter un Nouvel Article 🚀</h1>
 
-    <?php if (isset($error)): ?>
+    <?php if ($error): ?>
       <div class="error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
-    <form method="POST">
+    <?php if ($success): ?>
+      <div class="success"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
+
+    <form method="POST" enctype="multipart/form-data">
       <div>
         <label for="title">Titre de l'article</label>
-        <input type="text" id="title" name="title" placeholder="Ex: Les 5 meilleurs frameworks PHP en 2026" required value="<?= htmlspecialchars($_POST['title'] ?? '') ?>">
+        <input type="text" id="title" name="title" required value="<?= htmlspecialchars($_POST['title'] ?? '') ?>">
       </div>
 
       <div>
         <label for="content">Contenu</label>
-        <textarea id="content" name="content" placeholder="Écris ton article ici... (texte brut pour l'instant)" required><?= htmlspecialchars($_POST['content'] ?? '') ?></textarea>
+        <textarea id="content" name="content" required><?= htmlspecialchars($_POST['content'] ?? '') ?></textarea>
       </div>
 
       <div>
@@ -64,12 +48,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </select>
       </div>
 
+      <div>
+        <label for="image">Image de couverture (jpg, jpeg, png, gif, webp – max 2 Mo)</label>
+        <input type="file" id="image" name="image" accept="image/*">
+        <small style="display:block; margin-top:0.5rem; color:#777;">Optionnel, mais recommandé pour un beau visuel !</small>
+      </div>
+
       <div class="form-actions">
         <button type="submit" class="btn primary">Publier l'article</button>
         <a href="index.php" class="btn secondary">Annuler</a>
       </div>
     </form>
   </div>
-
 </body>
 </html>
